@@ -1,0 +1,53 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		maven {url 'http://files.minecraftforge.net/maven'}
+		maven {url 'http://repo.spongepowered.org/maven'}
+	}
+	dependencies {
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+		classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'net.minecraftforge.gradle.liteloader'
+apply plugin: 'org.spongepowered.mixin'
+
+minecraft.version = '1.12'
+
+group = 'net.earthcomputer.enchantment_cracking'
+archivesBaseName = "enchantment_cracking-${minecraft.version}"
+version = '1.0'
+
+minecraft {
+	mappings = 'snapshot_20180702'
+	runDir = 'run'
+	makeObfSourceJar = false
+}
+
+litemod {
+	json {
+		name = 'enchantment_cracking'
+		displayName = 'Enchantment Cracking'
+		mcversion = project.minecraft.version
+		version = project.version
+		author = 'Earthcomputer'
+		mixinConfigs = ['mixins.enchantment_cracking.json']
+	}
+}
+sourceSets {
+	main {
+		ext.refMap = 'mixins.enchantment_cracking.refmap.json'
+	}
+}
+
+mixin {
+	defaultObfuscationEnv notch
+}
+
+jar {
+	classifier = ''
+	baseName = archivesBaseName
+	from litemod.outputs
+}

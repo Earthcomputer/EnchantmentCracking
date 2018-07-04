@@ -1,0 +1,5 @@
+{
+	"name": "enchantment_cracking",
+	"mcversion": "1.12",
+	"mixinConfigs": ["mixins.enchantment_cracking.json"]
+}

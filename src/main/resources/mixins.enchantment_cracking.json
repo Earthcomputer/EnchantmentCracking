@@ -1,0 +1,33 @@
+{
+	"required": true,
+	"package": "net.earthcomputer.enchcrack.mixin",
+	"refmap": "mixins.enchantment_cracking.refmap.json",
+	"minVersion": "0.6",
+	"client": [
+		"MixinGuiEnchantment",
+		"MixinLivingBase",
+		"MixinPlayer",
+		"MixinPlayerSP",
+		"MixinPlayerControllerMP",
+		"MixinBlockCauldron",
+		"MixinContainerBeacon",
+		"MixinContainerMerchant",
+		"MixinContainerRepairOutputSlot",
+		"MixinEnchantmentDamage",
+		"MixinItemStack",
+		"MixinItemHoe",
+		"MixinItemSpade",
+		"MixinItemShears",
+		"MixinItemTool",
+		"MixinItemCarrotOnAStick",
+		"MixinItemFishingRod",
+		"MixinEntitySnowman",
+		"MixinEntityMooshroom",
+		"MixinEntityCreeper",
+		"MixinItemBow",
+		"MixinMinecraft"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
