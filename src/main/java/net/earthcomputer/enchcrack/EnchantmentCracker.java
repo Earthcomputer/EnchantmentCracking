@@ -18,6 +18,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentData;
@@ -158,7 +159,8 @@ public class EnchantmentCracker {
 	 * This section is in charge of rendering the overlay on the enchantment GUI
 	 */
 
-	public static void drawEnchantmentGUIOverlay() {
+	public static void drawEnchantmentGUIOverlay(GuiScreen gui, List<EnchantmentData> wanted,
+			List<EnchantmentData> unwanted) {
 		List<String> lines = new ArrayList<>();
 
 		lines.add(I18n.format("enchCrack.state", I18n.format("enchCrack.state." + crackState.getName())));
@@ -195,6 +197,16 @@ public class EnchantmentCracker {
 		int y = 0;
 		for (String line : lines) {
 			fontRenderer.drawString(line, 0, y, 0xffffff);
+			y += fontRenderer.FONT_HEIGHT;
+		}
+
+		y = gui.height - (wanted.size() + unwanted.size()) * fontRenderer.FONT_HEIGHT;
+		for (EnchantmentData ench : wanted) {
+			fontRenderer.drawString(ench.enchantment.getTranslatedName(ench.enchantmentLevel), 0, y, 0x00ff00);
+			y += fontRenderer.FONT_HEIGHT;
+		}
+		for (EnchantmentData ench : unwanted) {
+			fontRenderer.drawString(ench.enchantment.getTranslatedName(ench.enchantmentLevel), 0, y, 0xff0000);
 			y += fontRenderer.FONT_HEIGHT;
 		}
 	}

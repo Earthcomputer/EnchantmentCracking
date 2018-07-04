@@ -52,7 +52,16 @@ public abstract class MixinGuiEnchantment extends GuiContainer {
 
 	@Inject(method = "drawGuiContainerBackgroundLayer", at = @At("RETURN"))
 	public void drawOverlay(float partialTicks, int mouseX, int mouseY, CallbackInfo ci) {
-		EnchantmentCracker.drawEnchantmentGUIOverlay();
+		List<EnchantmentData> wanted = new ArrayList<>();
+		List<EnchantmentData> unwanted = new ArrayList<>();
+		for (EnchantmentData ench : enchantments) {
+			if (!wantedButtons.get(ench).enabled) {
+				wanted.add(ench);
+			} else if (!unwantedButtons.get(ench).enabled) {
+				unwanted.add(ench);
+			}
+		}
+		EnchantmentCracker.drawEnchantmentGUIOverlay(this, wanted, unwanted);
 	}
 
 	@Inject(method = "mouseClicked", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;sendEnchantPacket(II)V"))
