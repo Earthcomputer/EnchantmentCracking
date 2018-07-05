@@ -4,6 +4,7 @@ enchCrack.state.crackingEnchSeed=Cracking XP Seed
 enchCrack.state.crackedEnchSeed=Cracked XP Seed
 enchCrack.state.cracking=Cracking
 enchCrack.state.cracked=Cracked
+enchCrack.state.enchantManipulating=Manipulating Enchantment
 enchCrack.state.invalid=Invalid
 
 enchCrack.addInfo=Add Info

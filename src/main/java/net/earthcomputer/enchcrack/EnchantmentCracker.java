@@ -177,7 +177,8 @@ public class EnchantmentCracker {
 
 		lines.add("");
 
-		if (crackState == EnumCrackState.CRACKED || crackState == EnumCrackState.CRACKED_ENCH_SEED) {
+		if (crackState == EnumCrackState.CRACKED || crackState == EnumCrackState.CRACKED_ENCH_SEED
+				|| crackState == EnumCrackState.ENCHANT_MANIPULATING) {
 			lines.add(I18n.format("enchCrack.enchantments"));
 		} else {
 			lines.add(I18n.format("enchCrack.clues"));
@@ -247,7 +248,8 @@ public class EnchantmentCracker {
 	}
 
 	public static void addEnchantmentSeedInfo(World world, BlockPos tablePos, ContainerEnchantment container) {
-		if (crackState == EnumCrackState.CRACKED_ENCH_SEED || crackState == EnumCrackState.CRACKED) {
+		if (crackState == EnumCrackState.CRACKED_ENCH_SEED || crackState == EnumCrackState.CRACKED
+				|| crackState == EnumCrackState.ENCHANT_MANIPULATING) {
 			return;
 		}
 
@@ -324,7 +326,7 @@ public class EnchantmentCracker {
 	}
 
 	private static void addPlayerRNGInfo(int enchantmentSeed) {
-		if (crackState == EnumCrackState.CRACKED) {
+		if (crackState == EnumCrackState.CRACKED || crackState == EnumCrackState.ENCHANT_MANIPULATING) {
 			return;
 		}
 
@@ -365,7 +367,7 @@ public class EnchantmentCracker {
 
 	public static void onEnchantedItem() {
 		doneEnchantment = true;
-		if (crackState == EnumCrackState.CRACKED) {
+		if (crackState == EnumCrackState.CRACKED || crackState == EnumCrackState.ENCHANT_MANIPULATING) {
 			possibleXPSeeds.clear();
 			possibleXPSeeds.add(playerRand.nextInt());
 		} else if (crackState == EnumCrackState.CRACKED_ENCH_SEED) {
@@ -387,7 +389,7 @@ public class EnchantmentCracker {
 	private static int timeout = 0;
 
 	private static EnchantManipulationStatus manipulateEnchantmentsSanityCheck(EntityPlayer player) {
-		if (crackState != EnumCrackState.CRACKED) {
+		if (crackState != EnumCrackState.CRACKED && crackState != EnumCrackState.ENCHANT_MANIPULATING) {
 			return EnchantManipulationStatus.NOT_CRACKED;
 		} else if (!player.onGround) {
 			return EnchantManipulationStatus.NOT_ON_GROUND;
@@ -447,13 +449,16 @@ public class EnchantmentCracker {
 			return EnchantManipulationStatus.IMPOSSIBLE;
 		}
 
+		crackState = EnumCrackState.ENCHANT_MANIPULATING;
+
 		if (timesNeeded != -1) {
 			if (timesNeeded != 0) {
 				player.closeScreen();
 				player.setLocationAndAngles(player.posX, player.posY, player.posZ, player.rotationYaw, 90);
 				// sync rotation to server before we throw any items
 				player.connection.sendPacket(new CPacketPlayer.Rotation(player.rotationYaw, 90, player.onGround));
-				player.sendChatMessage(I18n.format("enchCrack.insn.starting", timesNeeded));
+				Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(
+						new TextComponentTranslation(I18n.format("enchCrack.insn.starting", timesNeeded)));
 			}
 			for (int i = 0; i < timesNeeded; i++) {
 				// throw the item
@@ -465,6 +470,7 @@ public class EnchantmentCracker {
 									TextFormatting.RED + I18n.format(st.getTranslation())));
 							tasks.clear();
 							timeout = 0;
+							crackState = EnumCrackState.CRACKED;
 						}
 					}
 					Slot matchingSlot = player.inventoryContainer.inventorySlots.stream()
@@ -489,6 +495,7 @@ public class EnchantmentCracker {
 			});
 			tasks.add(() -> {
 				timeout = 0;
+				crackState = EnumCrackState.CRACKED;
 				return doneEnchantment;
 			});
 		}
@@ -519,6 +526,7 @@ public class EnchantmentCracker {
 					Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(message);
 					tasks.clear();
 					timeout = 0;
+					crackState = EnumCrackState.CRACKED;
 				}
 			}
 		}
@@ -588,7 +596,8 @@ public class EnchantmentCracker {
 			return Collections.emptyList();
 		ContainerEnchantment enchContainer = (ContainerEnchantment) Minecraft.getMinecraft().player.openContainer;
 
-		if (crackState != EnumCrackState.CRACKED_ENCH_SEED && crackState != EnumCrackState.CRACKED) {
+		if (crackState != EnumCrackState.CRACKED_ENCH_SEED && crackState != EnumCrackState.CRACKED
+				&& crackState != EnumCrackState.ENCHANT_MANIPULATING) {
 			if (enchContainer.enchantClue[slot] == -1) {
 				// if we haven't cracked it, and there's no clue, then we can't give any
 				// information about the enchantment
@@ -611,7 +620,7 @@ public class EnchantmentCracker {
 
 	public static enum EnumCrackState implements IStringSerializable {
 		UNCRACKED("uncracked"), CRACKING_ENCH_SEED("crackingEnchSeed"), CRACKED_ENCH_SEED("crackedEnchSeed"), CRACKING(
-				"cracking"), CRACKED("cracked"), INVALID("invalid");
+				"cracking"), CRACKED("cracked"), ENCHANT_MANIPULATING("enchantManipulating"), INVALID("invalid");
 
 		private String name;
 
