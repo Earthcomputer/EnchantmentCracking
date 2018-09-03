@@ -473,9 +473,15 @@ public class EnchantmentCracker {
 							crackState = EnumCrackState.CRACKED;
 						}
 					}
-					Slot matchingSlot = player.inventoryContainer.inventorySlots.stream()
-							.filter(Slot::getHasStack).findAny().orElse(null);
-					if (matchingSlot == null) {
+					if (player.inventory.getItemStack().isEmpty()) {
+						Slot matchingSlot = player.inventoryContainer.inventorySlots.stream().
+								filter(s -> s.getStack().getCount() == s.getStack().getMaxStackSize()).findAny().orElse(null);
+						if (matchingSlot == null) {
+							return false;
+						}
+						Minecraft.getMinecraft().playerController.windowClick(player.inventoryContainer.windowId, matchingSlot.slotNumber, 0, ClickType.PICKUP, player);
+					}
+					if (player.inventory.getItemStack().isEmpty()) {
 						return false;
 					}
 					expectedThrows++;
@@ -483,7 +489,7 @@ public class EnchantmentCracker {
 						playerRand.nextInt();
 					}
 					Minecraft.getMinecraft().playerController.windowClick(player.inventoryContainer.windowId,
-							matchingSlot.slotNumber, 0, ClickType.THROW, player);
+							-999, 1, ClickType.PICKUP, player);
 					return true;
 				});
 			}
