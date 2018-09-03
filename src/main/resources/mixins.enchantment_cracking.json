@@ -5,11 +5,13 @@
 	"minVersion": "0.6",
 	"client": [
 		"MixinGuiEnchantment",
+		"MixinGuiContainer",
 		"MixinLivingBase",
 		"MixinPlayer",
 		"MixinPlayerSP",
 		"MixinPlayerControllerMP",
 		"MixinBlockCauldron",
+		"MixinContainer",
 		"MixinContainerBeacon",
 		"MixinContainerMerchant",
 		"MixinContainerRepairOutputSlot",

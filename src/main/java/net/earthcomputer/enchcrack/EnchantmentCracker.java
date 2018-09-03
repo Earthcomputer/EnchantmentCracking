@@ -495,6 +495,18 @@ public class EnchantmentCracker {
 			}
 			// dummy enchantment
 			tasks.add(() -> {
+				if (!player.inventory.getItemStack().isEmpty()) {
+					for (Slot targetSlot : player.inventoryContainer.inventorySlots) {
+						if (!targetSlot.getHasStack()
+								|| (ItemStack.areItemStacksEqual(player.inventory.getItemStack(), targetSlot.getStack())
+										&& targetSlot.getStack().getCount() < targetSlot.getStack().getMaxStackSize())) {
+							Minecraft.getMinecraft().playerController.windowClick(player.inventoryContainer.windowId, targetSlot.slotNumber, 0, ClickType.PICKUP, player);
+							if (player.inventory.getItemStack().isEmpty())
+								break;
+						}
+					}
+				}
+					
 				doneEnchantment = false;
 				player.sendMessage(new TextComponentTranslation("enchCrack.insn.dummy"));
 				return true;
@@ -622,6 +634,10 @@ public class EnchantmentCracker {
 			int enchantLevels = enchContainer.enchantLevels[slot];
 			return getEnchantmentList(rand, xpSeed, enchantingStack, slot, enchantLevels);
 		}
+	}
+
+	public static boolean isEnchantManipulating() {
+		return crackState == EnumCrackState.ENCHANT_MANIPULATING;
 	}
 
 	public static enum EnumCrackState implements IStringSerializable {
