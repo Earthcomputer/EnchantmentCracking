@@ -183,9 +183,9 @@ public abstract class MixinGuiEnchantment extends GuiContainer {
 						EnchantmentInstance ench = new EnchantmentInstance(enchantment, enchLvl);
 						enchantments.add(ench);
 						if (!wantedButtons.containsKey(ench)) {
-							wantedButtons.put(ench, new GuiButton(0, 0, 0, 10, 10, "Y"));
-							unwantedButtons.put(ench, new GuiButton(0, 0, 0, 10, 10, "N"));
-							GuiButton dontCareButton = new GuiButton(0, 0, 0, 10, 10, "DC");
+							wantedButtons.put(ench, new GuiButton(0, 0, 0, 15, 15, "Y"));
+							unwantedButtons.put(ench, new GuiButton(0, 0, 0, 15, 15, "N"));
+							GuiButton dontCareButton = new GuiButton(0, 0, 0, 15, 15, "DC");
 							dontCareButton.enabled = false;
 							dontCareButtons.put(ench, dontCareButton);
 						}
