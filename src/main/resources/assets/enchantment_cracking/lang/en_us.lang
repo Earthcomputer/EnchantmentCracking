@@ -36,6 +36,8 @@ enchCrack.xpSeed.one=XP Seed: %08X
 enchCrack.xpSeed.many=Possible XP seeds: %d
 enchCrack.playerRNGSeed.many=Possible player RNG seeds: %d
 
+enchCrack.insn.confirm.line1=This operation will throw %d items
+enchCrack.insn.confirm.line2=Are you sure you want to continue?
 enchCrack.insn.starting=Throwing %d items...
 enchCrack.insn.dummy=Do a dummy enchantment
 enchCrack.insn.ready=Your enchantment seed is ready
@@ -46,3 +48,5 @@ enchCrack.manipStatus.notCracked=You need to be in crack state Cracked
 enchCrack.manipStatus.notOnGround=You are not on solid ground
 enchCrack.manipStatus.emptyInventory=Your inventory is empty
 enchCrack.manipStatus.impossible=It's impossible or would take too long to get those enchantments
+
+enchCrack.timeout=Timed Out

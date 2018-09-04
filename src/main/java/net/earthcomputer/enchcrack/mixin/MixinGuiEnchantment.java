@@ -13,12 +13,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.earthcomputer.enchcrack.EnchantmentCracker;
-import net.earthcomputer.enchcrack.EnchantmentInstance;
-import net.earthcomputer.enchcrack.GuiSlotEnchantment;
 import net.earthcomputer.enchcrack.EnchantmentCracker.EnchantManipulationStatus;
+import net.earthcomputer.enchcrack.EnchantmentInstance;
+import net.earthcomputer.enchcrack.EnchantmentManipulationPlan;
+import net.earthcomputer.enchcrack.GuiSlotEnchantment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiEnchantment;
+import net.minecraft.client.gui.GuiYesNo;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.enchantment.Enchantment;
@@ -128,12 +130,26 @@ public abstract class MixinGuiEnchantment extends GuiContainer {
 					predicate = predicate.and(l -> !l.contains(ench));
 				}
 			}
-			EnchantManipulationStatus status = EnchantmentCracker
-					.manipulateEnchantments(inventorySlots.getSlot(0).getStack().getItem(), predicate);
-			if (status != EnchantManipulationStatus.OK) {
-				ITextComponent message = new TextComponentTranslation(status.getTranslation());
-				message.getStyle().setColor(TextFormatting.RED);
-				Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(message);
+			EnchantmentManipulationPlan plan = EnchantmentCracker.makeEnchantmentManipulationPlan(inventorySlots.getSlot(0).getStack().getItem(), predicate);
+			if (plan != null && plan.getType() == EnchantmentManipulationPlan.Type.THROW_ITEMS) {
+				Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
+					Minecraft.getMinecraft().displayGuiScreen(this);
+					if (result) {
+						EnchantManipulationStatus status = EnchantmentCracker.manipulateEnchantments(plan);
+						if (status != EnchantManipulationStatus.OK) {
+							ITextComponent message = new TextComponentTranslation(status.getTranslation());
+							message.getStyle().setColor(TextFormatting.RED);
+							Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(message);
+						}
+					}
+				}, I18n.format("enchCrack.insn.confirm.line1", plan.getItemsToThrow()), I18n.format("enchCrack.insn.confirm.line2"), 0));
+			} else {
+				EnchantManipulationStatus status = EnchantmentCracker.manipulateEnchantments(plan);
+				if (status != EnchantManipulationStatus.OK) {
+					ITextComponent message = new TextComponentTranslation(status.getTranslation());
+					message.getStyle().setColor(TextFormatting.RED);
+					Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(message);
+				}
 			}
 			break;
 		}

@@ -399,9 +399,60 @@ public class EnchantmentCracker {
 			return EnchantManipulationStatus.OK;
 		}
 	}
+	
+	public static EnchantmentManipulationPlan makeEnchantmentManipulationPlan(Item item, Predicate<List<EnchantmentData>> enchantmentsPredicate) {
+		ItemStack stack = new ItemStack(item);
+		long seed = Util.getRandomSeed(playerRand);
+		Random rand = new Random();
+		
+		int xpSeed = (int) (seed >>> 16);
+		int slot;
+		int[] enchantLevels = new int[3];
+		for (int bookshelves = 0; bookshelves <= 15; bookshelves++) {
+			rand.setSeed(xpSeed);
+			for (slot = 0; slot < 3; slot++) {
+				int level = EnchantmentHelper.calcItemStackEnchantability(rand, slot, bookshelves, stack);
+				if (level < slot + 1)
+					level = 0;
+				enchantLevels[slot] = level;
+			}
+			for (slot = 0; slot < 3; slot++) {
+				List<EnchantmentData> enchantments = getEnchantmentList(rand, xpSeed, stack, slot, enchantLevels[slot]);
+				if (enchantmentsPredicate.test(enchantments))
+					return new EnchantmentManipulationPlan(EnchantmentManipulationPlan.Type.NO_DUMMY, 0, bookshelves, slot);
+			}
+		}
+		
+		for (int itemThrows = 0; itemThrows < 10000; itemThrows++) {
+			xpSeed = (int) (((seed * MULTIPLIER + ADDEND) & MASK) >>> 16);
+			for (int bookshelves = 0; bookshelves <= 15; bookshelves++) {
+				rand.setSeed(xpSeed);
+				for (slot = 0; slot < 3; slot++) {
+					int level = EnchantmentHelper.calcItemStackEnchantability(rand, slot, bookshelves, stack);
+					if (level < slot + 1)
+						level = 0;
+					enchantLevels[slot] = level;
+				}
+				for (slot = 0; slot < 3; slot++) {
+					List<EnchantmentData> enchantments = getEnchantmentList(rand, xpSeed, stack, slot, enchantLevels[slot]);
+					if (enchantmentsPredicate.test(enchantments))
+						return new EnchantmentManipulationPlan(itemThrows == 0 ?
+								EnchantmentManipulationPlan.Type.THROW_NO_ITEMS
+								: EnchantmentManipulationPlan.Type.THROW_ITEMS,
+								itemThrows, bookshelves, slot);
+				}
+			}
+			for (int i = 0; i < 4; i++)
+				seed = (seed * MULTIPLIER + ADDEND) & MASK;
+		}
+		
+		return null;
+	}
 
-	public static EnchantManipulationStatus manipulateEnchantments(Item item,
-			Predicate<List<EnchantmentData>> enchantmentsPredicate) {
+	public static EnchantManipulationStatus manipulateEnchantments(EnchantmentManipulationPlan plan) {
+		if (plan == null)
+			return EnchantManipulationStatus.IMPOSSIBLE;
+		
 		EntityPlayerSP player = Minecraft.getMinecraft().player;
 
 		EnchantManipulationStatus status = manipulateEnchantmentsSanityCheck(player);
@@ -409,58 +460,18 @@ public class EnchantmentCracker {
 			return status;
 		}
 
-		ItemStack stack = new ItemStack(item);
-		long seed = Util.getRandomSeed(playerRand);
-		// -2: not found; -1: no dummy enchantment needed; >= 0: number of times needed
-		// to throw out item before dummy enchantment
-		int timesNeeded = -2;
-		int bookshelvesNeeded = 0;
-		int slot = 0;
-		int[] enchantLevels = new int[3];
-		outerLoop: for (int i = -1; i < 10000; i++) {
-			int xpSeed = (int) ((i == -1 ? seed : ((seed * MULTIPLIER + ADDEND) & MASK)) >>> 16);
-			Random rand = new Random();
-			for (bookshelvesNeeded = 0; bookshelvesNeeded <= 15; bookshelvesNeeded++) {
-				rand.setSeed(xpSeed);
-				for (slot = 0; slot < 3; slot++) {
-					int level = EnchantmentHelper.calcItemStackEnchantability(rand, slot, bookshelvesNeeded, stack);
-					if (level < slot + 1) {
-						level = 0;
-					}
-					enchantLevels[slot] = level;
-				}
-				for (slot = 0; slot < 3; slot++) {
-					List<EnchantmentData> enchantments = getEnchantmentList(rand, xpSeed, stack, slot,
-							enchantLevels[slot]);
-					if (enchantmentsPredicate.test(enchantments)) {
-						timesNeeded = i;
-						break outerLoop;
-					}
-				}
-			}
-
-			if (i != -1) {
-				for (int j = 0; j < 4; j++) {
-					seed = (seed * MULTIPLIER + ADDEND) & MASK;
-				}
-			}
-		}
-		if (timesNeeded == -2) {
-			return EnchantManipulationStatus.IMPOSSIBLE;
-		}
-
 		crackState = EnumCrackState.ENCHANT_MANIPULATING;
 
-		if (timesNeeded != -1) {
-			if (timesNeeded != 0) {
+		if (plan.getType() != EnchantmentManipulationPlan.Type.NO_DUMMY) {
+			if (plan.getType() != EnchantmentManipulationPlan.Type.THROW_NO_ITEMS) {
 				player.closeScreen();
 				player.setLocationAndAngles(player.posX, player.posY, player.posZ, player.rotationYaw, 90);
 				// sync rotation to server before we throw any items
 				player.connection.sendPacket(new CPacketPlayer.Rotation(player.rotationYaw, 90, player.onGround));
 				Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(
-						new TextComponentTranslation(I18n.format("enchCrack.insn.starting", timesNeeded)));
+						new TextComponentTranslation(I18n.format("enchCrack.insn.starting", plan.getItemsToThrow())));
 			}
-			for (int i = 0; i < timesNeeded; i++) {
+			for (int i = 0; i < plan.getItemsToThrow(); i++) {
 				// throw the item
 				tasks.add(() -> {
 					EnchantManipulationStatus st = manipulateEnchantmentsSanityCheck(player);
@@ -517,12 +528,10 @@ public class EnchantmentCracker {
 				return doneEnchantment;
 			});
 		}
-		final int bookshelvesNeeded_f = bookshelvesNeeded;
-		final int slot_f = slot;
 		tasks.add(() -> {
 			player.sendMessage(new TextComponentString(TextFormatting.BOLD + I18n.format("enchCrack.insn.ready")));
-			player.sendMessage(new TextComponentTranslation("enchCrack.insn.bookshelves", bookshelvesNeeded_f));
-			player.sendMessage(new TextComponentTranslation("enchCrack.insn.slot", slot_f + 1));
+			player.sendMessage(new TextComponentTranslation("enchCrack.insn.bookshelves", plan.getBookshelves()));
+			player.sendMessage(new TextComponentTranslation("enchCrack.insn.slot", plan.getSlot() + 1));
 			return true;
 		});
 
