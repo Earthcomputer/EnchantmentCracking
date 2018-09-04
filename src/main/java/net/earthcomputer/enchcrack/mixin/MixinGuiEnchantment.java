@@ -71,7 +71,7 @@ public abstract class MixinGuiEnchantment extends GuiContainer {
 		EnchantmentCracker.onEnchantedItem();
 	}
 
-	@Inject(method = "drawScreen", at = @At("RETURN"))
+	@Inject(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiEnchantment;renderHoveredToolTip(II)V"))
 	public void onDrawScreen(int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
 		if (EnchantmentCracker.isCracked())
 			list.drawScreen(mouseX, mouseY, partialTicks);
